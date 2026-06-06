@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IFARRAIÁ 2026 🎪</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Nunito:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="loading-screen">
+      <div class="spinner"></div>
+      <p>Carregando rifa...</p>
+    </div>
+
+    <div class="bandeirolas"></div>
+
+    <header>
+      <div class="deco">🌽 🎪 🎆 🥁 🌻</div>
+      <h1>IFARRAIÁ</h1>
+      <div class="year">2 0 2 6</div>
+      <p class="subtitle">Clique no número para marcar como pego</p>
+    </header>
+
+    <div class="info-row">
+      <div class="info-card">
+        <div class="lbl">Data do Sorteio</div>
+        <div class="val">21/06</div>
+      </div>
+      <div class="info-card">
+        <div class="lbl">Cada Número</div>
+        <div class="val">R$ 4,00</div>
+        <div class="sub">Pix: 82999214119</div>
+      </div>
+      <div class="prize-card">
+        <div class="prize-icon">🧺</div>
+        <div>
+          <div class="prize-title">1º e único prêmio</div>
+          <div class="prize-name">Balaio Junino</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-wrap">
+      <div class="stats-row">
+        <div class="stat-pill">
+          <span class="dot dot-taken"></span
+          ><span id="count-taken">0</span>&nbsp;pegos
+        </div>
+        <div class="stat-pill">
+          <span class="dot dot-free"></span
+          ><span id="count-free">1000</span>&nbsp;disponíveis
+        </div>
+      </div>
+      <div class="progress-bg">
+        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+      </div>
+      <div class="progress-label" id="progress-label">0% vendido</div>
+    </div>
+
+    <div class="sorteio-wrap">
+      <button class="btn-sorteio" id="btn-sorteio">Realizar Sorteio</button>
+    </div>
+
+    <div class="grid-wrap">
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--red)"></div>
+        Disponível
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--green)"></div>
+        Já foi pego ✓
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal" id="main-modal">
+        <div class="num-display" id="modal-num">–</div>
+        <span class="modal-status" id="modal-status">–</span>
+        <div id="modal-body"></div>
+        <div class="modal-btns" id="modal-btns"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="confirm-overlay">
+      <div class="modal">
+        <div style="font-size: 2.5rem; margin-bottom: 10px">⚠️</div>
+        <p
+          style="
+            font-size: 16px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 8px;
+          "
+        >
+          Tem certeza?
+        </p>
+        <p
+          style="color: #555; font-size: 14px; margin-bottom: 20px"
+          id="confirm-msg"
+        >
+          –
+        </p>
+        <div class="modal-btns">
+          <button class="btn btn-unmark" id="confirm-yes">Sim, liberar</button>
+          <button class="btn btn-cancel" id="confirm-no">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="roulette-overlay">
+      <div class="roulette-deco">🌽 🎪 🥁 🎆 🌻</div>
+      <div class="roulette-title">Sorteio IFARRAIÁ</div>
+      <div class="roulette-subtitle" id="roulette-sub">
+        1 ganhador do Balaio Junino
+      </div>
+
+      <div class="raffle-stage">
+        <div class="prize-label-top" id="prize-label-top"></div>
+        <canvas id="raffle-canvas" width="320" height="260"></canvas>
+      </div>
+
+      <div class="roulette-btns" id="roulette-btns">
+        <button
+          class="btn btn-gold"
+          id="btn-start-roll"
+          style="min-width: 180px"
+        >
+          ▶ Começar Sorteio
+        </button>
+        <button class="btn btn-cancel" id="btn-close-roulette">✕ Fechar</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="online-bar online" id="online-bar">
+      <div class="online-dot"></div>
+      <span id="online-text">Conectado — atualizações em tempo real</span>
+    </div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
