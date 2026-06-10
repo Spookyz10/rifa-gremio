@@ -36,6 +36,29 @@ for (let i = 1; i <= TOTAL; i++) {
   grid.appendChild(btn);
 }
 
+// Converte valores antigos (string) para o novo formato objeto
+function normalizeEntry(value, num) {
+  if (typeof value === "string") {
+    return {
+      comprador: value,
+      contato: "não informado",
+      vendedor: "não informado",
+    };
+  }
+  if (value && typeof value === "object") {
+    return {
+      comprador: value.comprador || "?",
+      contato: value.contato || "não informado",
+      vendedor: value.vendedor || "não informado",
+    };
+  }
+  return {
+    comprador: "erro",
+    contato: "erro",
+    vendedor: "erro",
+  };
+}
+
 async function ensureDoc() {
   const snap = await getDoc(docRef);
   if (!snap.exists()) {
@@ -80,15 +103,18 @@ function updateStats() {
   document.getElementById("progress-label").textContent = pct + "% vendido";
 }
 
-async function markNum(num, name) {
-  const newMap = { ...takenMap, [num]: name };
+async function markNum(num, comprador, contato, vendedor) {
+  const newMap = {
+    ...takenMap,
+    [num]: { comprador, contato, vendedor },
+  };
   const btn = grid.querySelector(`[data-num="${num}"]`);
   takenMap = newMap;
   btn.classList.add("taken");
   updateStats();
   try {
     await setDoc(docRef, { takenMap: newMap });
-    showToast(`Número ${num} marcado para ${name} ✓`);
+    showToast(`Número ${num} marcado para ${comprador} (vendedor: ${vendedor}) ✓`);
   } catch (e) {
     delete takenMap[num];
     btn.classList.remove("taken");
@@ -119,7 +145,9 @@ let pendingUnmarkNum = null;
 
 function openModal(num) {
   const isTaken = takenMap[num] !== undefined;
-  const owner = takenMap[num];
+  const rawOwner = takenMap[num];
+  const owner = rawOwner ? normalizeEntry(rawOwner, num) : null;
+
   document.getElementById("modal-num").textContent = num;
   const st = document.getElementById("modal-status");
   st.textContent = isTaken ? "✓ Pego" : "Disponível";
@@ -130,38 +158,56 @@ function openModal(num) {
   btns.innerHTML = "";
 
   if (isTaken) {
-    body.innerHTML = `<div class="owner-badge">👤 ${owner}</div><p>Este número pertence a <strong>${owner}</strong>.<br>Deseja liberar?</p>`;
+    body.innerHTML = `
+      <div class="owner-badge">👤 Comprador: ${owner.comprador}</div>
+      <div class="owner-badge">📞 Contato: ${owner.contato}</div>
+      <div class="owner-badge">🤝 Vendedor: ${owner.vendedor}</div>
+      <p>Deseja liberar este número?</p>
+    `;
     const unmark = document.createElement("button");
     unmark.className = "btn btn-unmark";
     unmark.textContent = "↩ Liberar número";
     unmark.onclick = () => {
       closeModal("modal-overlay");
-      openConfirm(num, owner);
+      openConfirm(num, owner.comprador);
     };
     btns.appendChild(unmark);
   } else {
-    body.innerHTML = `<p style="margin-bottom:10px;">Qual o nome de quem vai pegar o <strong>${num}</strong>?</p>`;
-    const input = document.createElement("input");
-    input.className = "name-input";
-    input.placeholder = "Nome da pessoa...";
-    input.maxLength = 40;
-    body.appendChild(input);
+    body.innerHTML = `
+      <p style="margin-bottom:10px;">Dados do número <strong>${num}</strong>:</p>
+      <input type="text" id="input-comprador" class="name-input" placeholder="Nome do comprador" maxlength="70">
+      <input type="text" id="input-contato" class="name-input" placeholder="Telefone" maxlength="30">
+      <input type="text" id="input-vendedor" class="name-input" placeholder="Nome e turma de quem vendeu" maxlength="70">
+    `;
     const confirm = document.createElement("button");
     confirm.className = "btn btn-confirm";
     confirm.textContent = "✓ Marcar pego";
     confirm.onclick = () => {
-      const name = input.value.trim();
-      if (!name) {
-        showToast("⚠️ Insira um nome antes de marcar");
+      const comprador = document.getElementById("input-comprador").value.trim();
+      const contato = document.getElementById("input-contato").value.trim();
+      const vendedor = document.getElementById("input-vendedor").value.trim();
+      if (!comprador || !contato || !vendedor) {
+        showToast("⚠️ Preencha todos os campos!");
         return;
       }
-      markNum(num, name);
+      markNum(num, comprador, contato, vendedor);
       closeModal("modal-overlay");
     };
-    input.addEventListener("keydown", (e) => {
+    // Enter no último campo aciona o botão
+    const handleEnter = (e) => {
       if (e.key === "Enter") confirm.click();
-    });
+    };
     btns.appendChild(confirm);
+    // Adicionar listener após elementos criados
+    setTimeout(() => {
+      const inpComprador = document.getElementById("input-comprador");
+      const inpContato = document.getElementById("input-contato");
+      const inpVendedor = document.getElementById("input-vendedor");
+      if (inpComprador) inpComprador.addEventListener("keydown", handleEnter);
+      if (inpContato) inpContato.addEventListener("keydown", handleEnter);
+      if (inpVendedor) inpVendedor.addEventListener("keydown", handleEnter);
+      if (inpComprador) inpComprador.focus();
+    }, 50);
   }
 
   const cancel = document.createElement("button");
@@ -170,16 +216,12 @@ function openModal(num) {
   cancel.onclick = () => closeModal("modal-overlay");
   btns.appendChild(cancel);
   document.getElementById("modal-overlay").classList.add("open");
-  setTimeout(() => {
-    const inp = document.querySelector(".name-input");
-    if (inp) inp.focus();
-  }, 200);
 }
 
-function openConfirm(num, owner) {
+function openConfirm(num, ownerName) {
   pendingUnmarkNum = num;
   document.getElementById("confirm-msg").textContent =
-    `"${owner}" tem o número ${num}. Tem certeza que quer liberar?`;
+    `"${ownerName}" tem o número ${num}. Tem certeza que quer liberar?`;
   document.getElementById("confirm-overlay").classList.add("open");
 }
 
@@ -257,10 +299,14 @@ btnStartRoll.onclick = async () => {
   btnStartRoll.disabled = true;
   btnStartRoll.textContent = "🔥 Sorteando...";
 
-  const participants = Object.entries(takenMap).map(([num, name]) => ({
-    num: parseInt(num),
-    name,
-  }));
+  const participants = Object.entries(takenMap).map(([num, data]) => {
+    const norm = normalizeEntry(data, num);
+    return {
+      num: parseInt(num),
+      name: norm.comprador,
+      raw: norm,
+    };
+  });
   const pool = [...participants];
   shuffleArray(pool);
   const winner = pool[0];
